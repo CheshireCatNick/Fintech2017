@@ -1,4 +1,5 @@
 from pycoin.ecdsa import generator_secp256k1 as g
+import random
 
 p = 2**256 - 2**32 - 977
 
@@ -18,6 +19,44 @@ g_d = d * g
 print('dg =', g_d)
 print(isOnCurve(g_d.x(), g_d.y()))
 
+def egcd(a, b):
+    if a == 0:
+        return (b, 0, 1)
+    else:
+        g, y, x = egcd(b % a, a)
+        return (g, x - (b // a) * y, y)
+
+def inv(a, m):
+    g, x, y = egcd(a, m)
+    return x % m
+
+# hash of message
+message = 1
+# sign
+n = int('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141', 16)
+while True:
+	k = random.randint(1, n - 1)
+	kg = k * g
+	x1 = kg.x()
+	r = x1 % n
+	if (r == 0):
+		continue
+	invK = inv(k, n) 
+	s = (invK * (message + r * d)) % n
+	if (s == 0):
+		continue
+	print(s)
+	break
+# verify
+w = inv(s, n)
+u1 = (message * w) % n
+u2 = (r * w) % n
+p = u1 * g + u2 * g_d
+print(p)
+v = p.x() % n
+print(v == r)
+
+'''
 31 =  11111: 4m + 4a or 5m + 1s
 32 = 100000
 
@@ -49,3 +88,4 @@ a ^ b
 
 
 4m + 1s
+'''
